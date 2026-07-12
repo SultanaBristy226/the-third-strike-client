@@ -1,0 +1,328 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FileWarning,
+  Send,
+  AlertTriangle,
+  User,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Camera,
+  Image,
+  Paperclip,
+  X,
+  Sparkles,
+  Shield,
+  Eye,
+  ChevronRight,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+
+export default function ComplaintForm() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    category: "",
+    title: "",
+    description: "",
+    evidence: null,
+    anonymous: true,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const categories = [
+    { value: "tiffin_theft", label: "🍱 Tiffin Theft", icon: "🍱" },
+    { value: "bribe", label: "💰 Bribe / Toll", icon: "💰" },
+    { value: "syllabus_bloat", label: "📚 Syllabus Bloat", icon: "📚" },
+    { value: "seat_abuse", label: "🪑 Seat Abuse", icon: "🪑" },
+    { value: "verbal_abuse", label: "🗣️ Verbal Abuse", icon: "🗣️" },
+    { value: "other", label: "📌 Other", icon: "📌" },
+  ];
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, evidence: file });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+
+    // Validation
+    if (!formData.category) {
+      setError("Please select a category");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!formData.description || formData.description.length < 10) {
+      setError("Please provide a detailed description (min 10 characters)");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // Mock API call - replace with actual API
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setSuccess(true);
+      setTimeout(() => {
+        navigate("/student/dashboard");
+      }, 2000);
+    } catch (err) {
+      setError("Failed to submit complaint. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#f0f4f8] dark:bg-[#090820] transition-colors duration-300">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center px-4 py-20">
+          <div className="max-w-md w-full text-center">
+            <div className="bg-white dark:bg-[#0d0a2a] rounded-2xl p-8 border border-gray-200 dark:border-white/10">
+              <div className="inline-flex p-4 rounded-full mb-6 bg-gradient-to-br from-green-400 to-green-600">
+                <CheckCircle className="h-12 w-12 text-white" />
+              </div>
+              <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
+                Complaint Submitted! 🎉
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                Your anonymous complaint has been sent to the teacher for review.
+                Stay strong against Kuddus!
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => navigate("/student/dashboard")}
+                  className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:scale-[1.02] transition-all"
+                >
+                  Back to Dashboard
+                </button>
+                <button
+                  onClick={() => {
+                    setSuccess(false);
+                    setFormData({ category: "", title: "", description: "", evidence: null, anonymous: true });
+                  }}
+                  className="px-6 py-3 rounded-xl font-bold text-purple-500 border-2 border-purple-500 hover:bg-purple-500 hover:text-white transition-all"
+                >
+                  Submit Another
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#f0f4f8] dark:bg-[#090820] transition-colors duration-300">
+      <Navbar />
+
+      <main className="flex-1 pt-20 px-4 md:px-6 max-w-4xl mx-auto w-full pb-8">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600">
+            <FileWarning className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
+              Report Kuddus
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Submit an anonymous complaint against Kuddus's atrocities
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Form */}
+          <div className="lg:col-span-2 bg-white dark:bg-[#0d0a2a] rounded-2xl p-6 border border-gray-200 dark:border-white/10">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Anonymous Badge */}
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <Eye className="h-4 w-4 text-purple-500" />
+                <span className="text-sm font-medium text-purple-500">
+                  🔒 This report is completely anonymous
+                </span>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, category: cat.value })}
+                      className={`p-3 rounded-xl text-sm font-bold transition-all duration-200 text-left ${
+                        formData.category === cat.value
+                          ? "text-white shadow-lg"
+                          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
+                      }`}
+                      style={{
+                        background: formData.category === cat.value 
+                          ? 'linear-gradient(135deg, #7030ef, #db1fff)'
+                          : 'rgba(112,48,239,0.05)',
+                        border: formData.category === cat.value 
+                          ? 'none'
+                          : '1px solid rgba(112,48,239,0.1)',
+                      }}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                  Complaint Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="Brief title of the incident"
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                  Description <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe what Kuddus did in detail..."
+                  rows="5"
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 resize-none"
+                  required
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  {formData.description.length}/500 characters
+                </p>
+              </div>
+
+              {/* Evidence Upload */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                  Evidence (Optional)
+                </label>
+                <div className="flex items-center gap-4">
+                  <label className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-gray-300 dark:border-white/10 hover:border-purple-500 transition-colors">
+                      <Camera className="h-6 w-6 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                          {formData.evidence ? formData.evidence.name : "Upload photo evidence"}
+                        </p>
+                        <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                  {formData.evidence && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, evidence: null })}
+                      className="p-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="p-3 rounded-xl text-sm font-medium bg-red-500/10 text-red-500 border border-red-500/20">
+                  {error}
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full rounded-xl py-3.5 font-extrabold text-sm text-white transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                style={{
+                  background: 'linear-gradient(135deg, #7030ef 0%, #db1fff 100%)',
+                  boxShadow: '0 4px 20px rgba(112,48,239,0.35)',
+                }}
+              >
+                {isSubmitting ? (
+                  "Submitting..."
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Submit Anonymous Complaint
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Sidebar - Info */}
+          <div className="bg-white dark:bg-[#0d0a2a] rounded-2xl p-6 border border-gray-200 dark:border-white/10 h-fit">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">📋 Complaint Guide</h3>
+            <div className="space-y-3">
+              {[
+                { icon: Shield, label: "100% Anonymous", desc: "Your identity is never revealed" },
+                { icon: Clock, label: "24/7 Reporting", desc: "Report anytime, anywhere" },
+                { icon: CheckCircle, label: "Teacher Review", desc: "Every complaint is reviewed" },
+                { icon: AlertTriangle, label: "3 Strikes Rule", desc: "3 complaints = impeachment" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                  <div className="p-1.5 rounded-lg bg-purple-500/10 mt-0.5">
+                    <item.icon className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{item.label}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-500/10 dark:to-pink-500/10 border border-purple-500/20">
+              <p className="text-sm font-bold text-purple-600 dark:text-purple-400">⚡ Tip</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400/80 mt-1">
+                Be specific about what happened. Include time, location, and details. Every detail helps!
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
