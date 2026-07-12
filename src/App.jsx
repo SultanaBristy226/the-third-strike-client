@@ -14,9 +14,15 @@ import SeatPlanner from "./pages/SeatPlanner";
 import Ledger from "./pages/Ledger";
 import FactChecker from "./pages/FactChecker";
 import SyllabusAI from "./pages/SyllabusAI";
+import TeacherComplaints from "./pages/TeacherComplaints";
+import TeacherStrikes from "./pages/TeacherStrikes";
+import TeacherAudit from "./pages/TeacherAudit";
+import CaptainStrikes from "./pages/CaptainStrikes";
 import { useAuth } from "./context/AuthContext";
 
-// Protected Route Component
+// ============================================
+// PROTECTED ROUTE
+// ============================================
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
   if (!user) {
@@ -25,7 +31,9 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Role Based Route Component
+// ============================================
+// ROLE BASED ROUTE
+// ============================================
 const RoleRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
   if (!user) {
@@ -37,8 +45,10 @@ const RoleRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-// Placeholder Component for pages not yet created
-const PlaceholderPage = ({ title, icon, description }) => (
+// ============================================
+// PLACEHOLDER PAGE
+// ============================================
+const PlaceholderPage = ({ title, icon, description, backLink }) => (
   <div className="min-h-screen flex items-center justify-center px-4 py-20 bg-[#f0f4f8] dark:bg-[#090820]">
     <div className="max-w-md w-full text-center">
       <div className="bg-white dark:bg-[#0d0a2a] rounded-2xl p-8 border border-gray-200 dark:border-white/10">
@@ -50,7 +60,7 @@ const PlaceholderPage = ({ title, icon, description }) => (
           {description || "This page is under construction. The resistance is working on it!"}
         </p>
         <Link 
-          to="/" 
+          to={backLink || "/"} 
           className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-sm text-white transition-all duration-300 hover:scale-[1.02]"
           style={{
             background: 'linear-gradient(135deg, #7030ef 0%, #db1fff 100%)',
@@ -64,6 +74,9 @@ const PlaceholderPage = ({ title, icon, description }) => (
   </div>
 );
 
+// ============================================
+// MAIN ROUTES
+// ============================================
 function AppRoutes() {
   return (
     <Routes>
@@ -102,29 +115,17 @@ function AppRoutes() {
       } />
       <Route path="/teacher/complaints" element={
         <RoleRoute allowedRoles={["teacher"]}>
-          <PlaceholderPage 
-            title="Complaints Review" 
-            icon="📋"
-            description="Review and manage anonymous complaints from students against Kuddus."
-          />
+          <TeacherComplaints />
         </RoleRoute>
       } />
       <Route path="/teacher/strikes" element={
         <RoleRoute allowedRoles={["teacher"]}>
-          <PlaceholderPage 
-            title="Issue Strikes" 
-            icon="⚡"
-            description="Review evidence and issue official strikes against Kuddus."
-          />
+          <TeacherStrikes />
         </RoleRoute>
       } />
       <Route path="/teacher/audit" element={
         <RoleRoute allowedRoles={["teacher"]}>
-          <PlaceholderPage 
-            title="Audit Log" 
-            icon="📊"
-            description="View complete history of all complaints, strikes, and actions taken."
-          />
+          <TeacherAudit />
         </RoleRoute>
       } />
 
@@ -141,11 +142,7 @@ function AppRoutes() {
       } />
       <Route path="/captain/strikes" element={
         <RoleRoute allowedRoles={["captain"]}>
-          <PlaceholderPage 
-            title="Strikes Management" 
-            icon="⚡"
-            description="View and manage all strikes issued against Kuddus."
-          />
+          <CaptainStrikes />
         </RoleRoute>
       } />
 
@@ -194,6 +191,9 @@ function AppRoutes() {
   );
 }
 
+// ============================================
+// APP
+// ============================================
 function App() {
   return (
     <ThemeProvider>
