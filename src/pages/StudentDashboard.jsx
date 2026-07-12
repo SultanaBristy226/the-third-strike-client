@@ -33,6 +33,8 @@ import {
   Plus,
   Trash2,
   Edit2,
+  Key,
+  Copy,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
@@ -40,13 +42,19 @@ import Footer from "../components/Footer";
 import ProgressBar from "../components/ProgressBar";
 import SeatGrid from "../components/SeatGrid";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 export default function StudentDashboard() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const [copied, setCopied] = useState(false);
+  const [strikeStatus, setStrikeStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const [stats, setStats] = useState({
-    complaints: 3,
-    strikes: 1,
-    warnings: 1,
-    sosSent: 2,
+    complaints: 0,
+    strikes: 0,
+    warnings: 0,
+    sosSent: 0,
   });
 
   const [students, setStudents] = useState([
@@ -119,11 +127,84 @@ export default function StudentDashboard() {
     { icon: CheckCircle, label: "SOS Responded", color: "text-green-500" },
   ];
 
+  // Copy Secret Code
+  const copySecretCode = () => {
+    if (user?.secretCode) {
+      navigator.clipboard.writeText(user.secretCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Fetch Strike Status
+  useEffect(() => {
+    const fetchStrikeStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/complaints/strike/status`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setStrikeStatus(data.strike);
+          setStats({
+            complaints: data.strike?.strikeCount || 0,
+            strikes: data.strike?.strikeCount || 0,
+            warnings: data.strike?.warnings?.length || 0,
+            sosSent: 2,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching strike status:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStrikeStatus();
+  }, [token]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f0f4f8] dark:bg-[#090820] transition-colors duration-300">
       <Navbar />
 
       <main className="flex-1 pt-20 px-4 md:px-6 max-w-7xl mx-auto w-full pb-8">
+        {/* Secret Code Card - Only for Students */}
+        {user?.role === "student" && user?.secretCode && (
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-500/10 dark:to-amber-500/10 border-2 border-yellow-400 dark:border-yellow-500">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-yellow-500/20">
+                  <Key className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-yellow-700 dark:text-yellow-400">🔑 Your Secret Code</p>
+                  <p className="text-2xl font-black text-yellow-700 dark:text-yellow-300 tracking-wider">
+                    {user.secretCode}
+                  </p>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400/80">
+                    Use this code with your Roll Number to login
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={copySecretCode}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 transition-colors"
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm font-medium text-green-600 dark:text-green-400">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">Copy Code</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
@@ -152,6 +233,64 @@ export default function StudentDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Strike Status Card */}
+        {strikeStatus && (
+          <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-[#0d0a2a] border border-gray-200 dark:border-white/10">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Kuddus Strike Status
+              </h3>
+              <span className={`text-sm font-bold px-3 py-1 rounded-full ${
+                strikeStatus.isImpeached 
+                  ? 'bg-red-500/10 text-red-500' 
+                  : strikeStatus.strikeCount >= 2 
+                    ? 'bg-orange-500/10 text-orange-500'
+                    : strikeStatus.strikeCount >= 1
+                      ? 'bg-yellow-500/10 text-yellow-500'
+                      : 'bg-green-500/10 text-green-500'
+              }`}>
+                {strikeStatus.currentStatus?.label || 'Safe'}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex gap-1">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                      i < strikeStatus.strikeCount
+                        ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg'
+                        : 'bg-gray-200 dark:bg-white/10 text-gray-400'
+                    }`}
+                  >
+                    {i < strikeStatus.strikeCount ? '⚡' : '○'}
+                  </div>
+                ))}
+              </div>
+              <div className="flex-1">
+                <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 transition-all duration-700"
+                    style={{ width: `${(strikeStatus.strikeCount / 3) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {strikeStatus.strikeCount}/3 strikes • {strikeStatus.currentStatus?.message || 'No strikes yet'}
+                </p>
+              </div>
+            </div>
+
+            {strikeStatus.isImpeached && (
+              <div className="mt-3 p-3 rounded-xl bg-red-500/10 border-2 border-red-500/20 text-center animate-pulse">
+                <p className="text-lg font-black text-red-500">🎉 KUDDUS HAS BEEN IMPEACHED! 🎉</p>
+                <p className="text-xs text-red-400/80">Justice has been served! Three strikes and Kuddus is out!</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

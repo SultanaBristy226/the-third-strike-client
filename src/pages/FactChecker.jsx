@@ -88,10 +88,8 @@ export default function FactChecker() {
     setResult(null);
 
     try {
-      // Mock AI processing - replace with actual API
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Simple mock logic - in real app this would use semantic search
       const fakeRule = fakeRules.some(rule => 
         query.toLowerCase().includes(rule.toLowerCase().slice(0, 10))
       );
@@ -99,7 +97,6 @@ export default function FactChecker() {
       const verdict = fakeRule ? "false" : "true";
       const confidence = fakeRule ? Math.floor(Math.random() * (95 - 85 + 1)) + 85 : Math.floor(Math.random() * (100 - 90 + 1)) + 90;
 
-      // Find matching rule from history
       const matchedRule = history.find(h => 
         h.claim.toLowerCase().includes(query.toLowerCase().slice(0, 15))
       );
@@ -182,7 +179,7 @@ export default function FactChecker() {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder='e.g. "1st Captains don\'t have to do homework"'
+                  placeholder="e.g. '1st Captains dont have to do homework'"
                   className="w-full rounded-xl pl-12 pr-4 py-4 text-sm bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
                 />
               </div>

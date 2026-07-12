@@ -8,31 +8,55 @@ import {
   User,
   GraduationCap,
   Shield,
-  ArrowRight
+  ArrowRight,
+  Key,
+  Hash
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rollNumber, setRollNumber] = useState("");
+  const [secretCode, setSecretCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [role, setRole] = useState("student");
+  const [loginMethod, setLoginMethod] = useState("roll"); // roll | email
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { theme } = useTheme();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    
+
     try {
-      await login(email, password, role);
+      let loginData;
+      
+      if (role === "student") {
+        // Student Login: Roll Number + Secret Code
+        if (!rollNumber || !secretCode) {
+          setError("Please enter your Roll Number and Secret Code");
+          setIsLoading(false);
+          return;
+        }
+        loginData = { rollNumber, secretCode, role };
+      } else {
+        // Teacher/Captain Login: Email + Password
+        if (!email || !password) {
+          setError("Please enter your Email and Password");
+          setIsLoading(false);
+          return;
+        }
+        loginData = { email, password, role };
+      }
+
+      await login(loginData);
+      
       if (role === "student") {
         navigate("/student/dashboard");
       } else if (role === "teacher") {
@@ -47,55 +71,20 @@ export default function Login() {
     }
   };
 
-  // Light mode image - Bright classroom
-  const lightBgImage = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1600&auto=format&fit=crop&q=80";
-  
-  // Dark mode image - Night/Dark classroom
-  const darkBgImage = "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1600&auto=format&fit=crop&q=80&sat=-100&bright=-30";
-
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-[#090820] transition-colors duration-300">
       <Navbar />
 
-      <main className="flex-1 flex items-center justify-center px-4 py-12 relative overflow-hidden">
-        {/* Background Image - Changes with theme */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
-          style={{
-            backgroundImage: `url('${theme === 'dark' ? darkBgImage : lightBgImage}')`,
-            filter: theme === 'dark' ? 'brightness(0.4) saturate(0.6)' : 'brightness(0.7) saturate(1.1)',
-          }}
-        />
-        
-        {/* Gradient Overlay - Changes with theme */}
-        <div 
-          className="absolute inset-0 transition-all duration-700"
-          style={{
-            background: theme === 'dark' 
-              ? 'linear-gradient(135deg, rgba(9,8,32,0.85) 0%, rgba(9,8,32,0.6) 100%)'
-              : 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 100%)',
-          }}
-        />
-
-        <div className="w-full max-w-md relative z-10">
-          {/* Login Card - Glassmorphism */}
-          <div 
-            className="rounded-2xl p-8 shadow-2xl transition-all duration-500 backdrop-blur-xl border"
-            style={{
-              background: theme === 'dark' 
-                ? 'rgba(9,8,32,0.85)'
-                : 'rgba(255,255,255,0.85)',
-              borderColor: theme === 'dark'
-                ? 'rgba(255,255,255,0.08)'
-                : 'rgba(255,255,255,0.3)',
-            }}
-          >
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Login Card */}
+          <div className="rounded-2xl p-8 shadow-xl transition-all duration-300 bg-white dark:bg-[#0d0a2a] border border-gray-200 dark:border-white/10">
             
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white transition-colors duration-300">
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">
                 Welcome Back
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Sign in to continue the fight against Kuddus
               </p>
             </div>
@@ -117,19 +106,22 @@ export default function Login() {
                   <button
                     key={r.value}
                     type="button"
-                    onClick={() => setRole(r.value)}
+                    onClick={() => {
+                      setRole(r.value);
+                      setError("");
+                    }}
                     className={`p-3 rounded-xl text-xs font-bold transition-all duration-200 flex flex-col items-center gap-1 ${
                       role === r.value
                         ? "text-white shadow-lg"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-white/10"
+                        : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
                     }`}
                     style={{
                       background: role === r.value 
                         ? 'linear-gradient(135deg, #7030ef 0%, #db1fff 100%)'
-                        : 'rgba(255,255,255,0.1)',
+                        : 'transparent',
                       border: role === r.value 
                         ? 'none'
-                        : '1px solid rgba(255,255,255,0.2)',
+                        : '1px solid #e5e7eb dark:border-white/10',
                     }}
                   >
                     <r.icon className="h-4 w-4" />
@@ -138,73 +130,106 @@ export default function Login() {
                 ))}
               </div>
 
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5 uppercase tracking-wider transition-colors duration-300">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="w-full rounded-xl pl-10 pr-4 py-3 text-sm outline-none transition-all duration-200 backdrop-blur-sm"
-                    style={{
-                      background: theme === 'dark' 
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(255,255,255,0.8)',
-                      border: theme === 'dark'
-                        ? '1px solid rgba(255,255,255,0.1)'
-                        : '1px solid rgba(255,255,255,0.3)',
-                      color: theme === 'dark' ? '#ffffff' : '#090820',
-                    }}
-                    required
-                  />
-                </div>
-              </div>
+              {/* Student Login: Roll Number + Secret Code */}
+              {role === "student" && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                      Roll Number
+                    </label>
+                    <div className="relative">
+                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                      <input
+                        type="text"
+                        value={rollNumber}
+                        onChange={(e) => setRollNumber(e.target.value)}
+                        placeholder="Enter your roll number (e.g. 101)"
+                        className="w-full rounded-xl pl-10 pr-4 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
+                        required
+                      />
+                    </div>
+                  </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5 uppercase tracking-wider transition-colors duration-300">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="w-full rounded-xl pl-10 pr-12 py-3 text-sm outline-none transition-all duration-200 backdrop-blur-sm"
-                    style={{
-                      background: theme === 'dark' 
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(255,255,255,0.8)',
-                      border: theme === 'dark'
-                        ? '1px solid rgba(255,255,255,0.1)'
-                        : '1px solid rgba(255,255,255,0.3)',
-                      color: theme === 'dark' ? '#ffffff' : '#090820',
-                    }}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                      Secret Code
+                    </label>
+                    <div className="relative">
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={secretCode}
+                        onChange={(e) => setSecretCode(e.target.value)}
+                        placeholder="Enter your secret code"
+                        className="w-full rounded-xl pl-10 pr-12 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* Forgot Password */}
-              <div className="text-right">
-                <Link to="/forgot-password" className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline transition-colors">
-                  Forgot Password?
-                </Link>
-              </div>
+              {/* Teacher/Captain Login: Email + Password */}
+              {(role === "teacher" || role === "captain") && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        className="w-full rounded-xl pl-10 pr-4 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        className="w-full rounded-xl pl-10 pr-12 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Forgot Password (Only for Teacher/Captain) */}
+              {(role === "teacher" || role === "captain") && (
+                <div className="text-right">
+                  <Link to="/forgot-password" className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline transition-colors">
+                    Forgot Password?
+                  </Link>
+                </div>
+              )}
 
               {/* Submit */}
               <button
@@ -220,13 +245,17 @@ export default function Login() {
               </button>
             </form>
 
-            {/* Sign Up Link */}
-            <p className="text-center text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300 mt-6">
-              Don't have an account?{" "}
-              <Link to="/register" className="font-bold text-purple-600 dark:text-purple-400 hover:underline transition-colors">
-                Join the Resistance
-              </Link>
-            </p>
+            {/* Demo Credentials Info */}
+            <div className="mt-6 p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                🧪 Demo Credentials
+              </p>
+              <div className="space-y-1 text-xs text-gray-600 dark:text-gray-300">
+                <p><span className="font-bold">Student:</span> Roll: 101 | Secret: ABC123</p>
+                <p><span className="font-bold">Teacher:</span> teacher@school.com | password: teacher123</p>
+                <p><span className="font-bold">Captain:</span> captain@demo.com | password: captain123</p>
+              </div>
+            </div>
           </div>
         </div>
       </main>

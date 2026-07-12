@@ -10,10 +10,11 @@ import {
   Shield,
   CheckCircle,
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  Key,
+  Hash
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -23,7 +24,7 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "student",
+    role: "student", // Default: student
     rollNumber: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -31,9 +32,9 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [generatedSecret, setGeneratedSecret] = useState("");
   const navigate = useNavigate();
   const { register } = useAuth();
-  const { theme } = useTheme();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -43,7 +44,20 @@ export default function Register() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    
+
+    // Validation
+    if (!formData.name) {
+      setError("Please enter your name");
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.role === "student" && !formData.rollNumber) {
+      setError("Please enter your roll number");
+      setIsLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       setIsLoading(false);
@@ -57,11 +71,17 @@ export default function Register() {
     }
 
     try {
-      await register(formData);
+      const result = await register(formData);
+      
+      // If student, save the generated secret code
+      if (result.role === "student" && result.secretCode) {
+        setGeneratedSecret(result.secretCode);
+      }
+      
       setSuccess(true);
       setTimeout(() => {
         navigate("/login");
-      }, 2000);
+      }, 3000);
     } catch (err) {
       setError(err.message || "Registration failed. Please try again.");
     } finally {
@@ -69,54 +89,41 @@ export default function Register() {
     }
   };
 
-  // Register page specific images
-  const lightBgImage = "https://images.unsplash.com/photo-1623287072802-ca4ecbec4861?w=1600&auto=format&fit=crop&q=80";
-  const darkBgImage = "https://images.unsplash.com/photo-1623287072802-ca4ecbec4861?w=1600&auto=format&fit=crop&q=80&sat=-100&bright=-30";
-
   if (success) {
     return (
       <div className="min-h-screen flex flex-col bg-white dark:bg-[#090820] transition-colors duration-300">
         <Navbar />
-        <main className="flex-1 flex items-center justify-center px-4 py-12 relative overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
-            style={{
-              backgroundImage: `url('${theme === 'dark' ? darkBgImage : lightBgImage}')`,
-              filter: theme === 'dark' ? 'brightness(0.4) saturate(0.6)' : 'brightness(0.7) saturate(1.1)',
-            }}
-          />
-          <div 
-            className="absolute inset-0 transition-all duration-700"
-            style={{
-              background: theme === 'dark' 
-                ? 'linear-gradient(135deg, rgba(9,8,32,0.85) 0%, rgba(9,8,32,0.6) 100%)'
-                : 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 100%)',
-            }}
-          />
-          
-          <div className="w-full max-w-md relative z-10">
-            <div 
-              className="rounded-2xl p-12 shadow-2xl transition-all duration-500 backdrop-blur-xl border text-center"
-              style={{
-                background: theme === 'dark' 
-                  ? 'rgba(9,8,32,0.85)'
-                  : 'rgba(255,255,255,0.85)',
-                borderColor: theme === 'dark'
-                  ? 'rgba(255,255,255,0.08)'
-                  : 'rgba(255,255,255,0.3)',
-              }}
-            >
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="w-full max-w-md">
+            <div className="rounded-2xl p-8 shadow-xl transition-all duration-300 bg-white dark:bg-[#0d0a2a] border border-gray-200 dark:border-white/10 text-center">
               <div className="inline-flex p-4 rounded-full mb-6"
                    style={{
                      background: 'linear-gradient(135deg, #7030ef 0%, #db1fff 100%)',
                    }}>
                 <CheckCircle className="h-12 w-12 text-white" />
               </div>
-              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white transition-colors duration-300 mb-2">
-                Registration Successful!
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">
+                {formData.role === "student" ? "🎓 Student Registered!" : "Account Created!"}
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300 mb-6">
-                Welcome to the resistance! Redirecting to login...
+              
+              {formData.role === "student" && generatedSecret && (
+                <div className="mb-4 p-4 rounded-xl bg-yellow-50 dark:bg-yellow-500/10 border-2 border-yellow-400 dark:border-yellow-500">
+                  <p className="text-sm font-bold text-yellow-600 dark:text-yellow-400">🔑 Your Secret Code</p>
+                  <p className="text-2xl font-black text-yellow-600 dark:text-yellow-400 mt-1">
+                    {generatedSecret}
+                  </p>
+                  <p className="text-xs text-yellow-500 dark:text-yellow-400/80 mt-1">
+                    ⚠️ Save this code! You'll need it to login.
+                  </p>
+                </div>
+              )}
+
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                {formData.role === "student" 
+                  ? `Student account created! Roll: ${formData.rollNumber}`
+                  : `${formData.role.charAt(0).toUpperCase() + formData.role.slice(1)} account created!`}
+                <br />
+                Redirecting to login...
               </p>
               <Link
                 to="/login"
@@ -139,44 +146,18 @@ export default function Register() {
     <div className="min-h-screen flex flex-col bg-white dark:bg-[#090820] transition-colors duration-300">
       <Navbar />
 
-      <main className="flex-1 flex items-center justify-center px-4 py-12 relative overflow-hidden">
-        {/* Background Image - Register page specific */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
-          style={{
-            backgroundImage: `url('${theme === 'dark' ? darkBgImage : lightBgImage}')`,
-            filter: theme === 'dark' ? 'brightness(0.4) saturate(0.6)' : 'brightness(0.7) saturate(1.1)',
-          }}
-        />
-        <div 
-          className="absolute inset-0 transition-all duration-700"
-          style={{
-            background: theme === 'dark' 
-              ? 'linear-gradient(135deg, rgba(9,8,32,0.85) 0%, rgba(9,8,32,0.6) 100%)'
-              : 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 100%)',
-          }}
-        />
-
-        <div className="w-full max-w-md relative z-10">
-          {/* Register Card - Glassmorphism */}
-          <div 
-            className="rounded-2xl p-8 shadow-2xl transition-all duration-500 backdrop-blur-xl border"
-            style={{
-              background: theme === 'dark' 
-                ? 'rgba(9,8,32,0.85)'
-                : 'rgba(255,255,255,0.85)',
-              borderColor: theme === 'dark'
-                ? 'rgba(255,255,255,0.08)'
-                : 'rgba(255,255,255,0.3)',
-            }}
-          >
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="rounded-2xl p-8 shadow-xl transition-all duration-300 bg-white dark:bg-[#0d0a2a] border border-gray-200 dark:border-white/10">
             
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white transition-colors duration-300">
-                Join the Resistance
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">
+                {formData.role === "student" ? "🎓 Student Registration" : "Create Account"}
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300 mt-1">
-                Create your account to fight against Kuddus
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {formData.role === "student" 
+                  ? "Register as a student to fight against Kuddus" 
+                  : "Register as Teacher or Captain"}
               </p>
             </div>
 
@@ -189,40 +170,45 @@ export default function Register() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Role Selection */}
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { value: "student", label: "Student", icon: User },
-                  { value: "teacher", label: "Teacher", icon: GraduationCap },
-                  { value: "captain", label: "Captain", icon: Shield },
-                ].map((r) => (
-                  <button
-                    key={r.value}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, role: r.value })}
-                    className={`p-3 rounded-xl text-xs font-bold transition-all duration-200 flex flex-col items-center gap-1 ${
-                      formData.role === r.value
-                        ? "text-white shadow-lg"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-white/10"
-                    }`}
-                    style={{
-                      background: formData.role === r.value 
-                        ? 'linear-gradient(135deg, #7030ef 0%, #db1fff 100%)'
-                        : 'rgba(255,255,255,0.1)',
-                      border: formData.role === r.value 
-                        ? 'none'
-                        : '1px solid rgba(255,255,255,0.2)',
-                    }}
-                  >
-                    <r.icon className="h-4 w-4" />
-                    {r.label}
-                  </button>
-                ))}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                  Role <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "student", label: "Student", icon: User },
+                    { value: "teacher", label: "Teacher", icon: GraduationCap },
+                    { value: "captain", label: "Captain", icon: Shield },
+                  ].map((r) => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, role: r.value })}
+                      className={`p-3 rounded-xl text-xs font-bold transition-all duration-200 flex flex-col items-center gap-1 ${
+                        formData.role === r.value
+                          ? "text-white shadow-lg"
+                          : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
+                      }`}
+                      style={{
+                        background: formData.role === r.value 
+                          ? 'linear-gradient(135deg, #7030ef 0%, #db1fff 100%)'
+                          : 'transparent',
+                        border: formData.role === r.value 
+                          ? 'none'
+                          : '1px solid #e5e7eb dark:border-white/10',
+                      }}
+                    >
+                      <r.icon className="h-4 w-4" />
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5 uppercase tracking-wider transition-colors duration-300">
-                  Full Name
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                  Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -230,105 +216,75 @@ export default function Register() {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Enter your full name"
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 backdrop-blur-sm"
-                  style={{
-                    background: theme === 'dark' 
-                      ? 'rgba(255,255,255,0.06)'
-                      : 'rgba(255,255,255,0.8)',
-                    border: theme === 'dark'
-                      ? '1px solid rgba(255,255,255,0.1)'
-                      : '1px solid rgba(255,255,255,0.3)',
-                    color: theme === 'dark' ? '#ffffff' : '#090820',
-                  }}
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
                   required
                 />
               </div>
 
-              {/* Roll Number */}
+              {/* Roll Number - Only for Student */}
               {formData.role === "student" && (
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5 uppercase tracking-wider transition-colors duration-300">
-                    Roll Number
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                    Roll Number <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="rollNumber"
-                    value={formData.rollNumber}
-                    onChange={handleChange}
-                    placeholder="Enter your roll number"
-                    className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 backdrop-blur-sm"
-                    style={{
-                      background: theme === 'dark' 
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(255,255,255,0.8)',
-                      border: theme === 'dark'
-                        ? '1px solid rgba(255,255,255,0.1)'
-                        : '1px solid rgba(255,255,255,0.3)',
-                      color: theme === 'dark' ? '#ffffff' : '#090820',
-                    }}
-                    required={formData.role === "student"}
-                  />
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <input
+                      type="text"
+                      name="rollNumber"
+                      value={formData.rollNumber}
+                      onChange={handleChange}
+                      placeholder="Enter your roll number (e.g. 101)"
+                      className="w-full rounded-xl pl-10 pr-4 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1.5">🔑 Your secret code will be auto-generated!</p>
                 </div>
               )}
 
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5 uppercase tracking-wider transition-colors duration-300">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-400" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Enter your email"
-                    className="w-full rounded-xl pl-10 pr-4 py-3 text-sm outline-none transition-all duration-200 backdrop-blur-sm"
-                    style={{
-                      background: theme === 'dark' 
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(255,255,255,0.8)',
-                      border: theme === 'dark'
-                        ? '1px solid rgba(255,255,255,0.1)'
-                        : '1px solid rgba(255,255,255,0.3)',
-                      color: theme === 'dark' ? '#ffffff' : '#090820',
-                    }}
-                    required
-                  />
+              {/* Email - Only for Teacher/Captain */}
+              {(formData.role === "teacher" || formData.role === "captain") && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email"
+                      className="w-full rounded-xl pl-10 pr-4 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
+                      required={formData.role !== "student"}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5 uppercase tracking-wider transition-colors duration-300">
-                  Password
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Create a password (min 6 chars)"
-                    className="w-full rounded-xl pl-10 pr-12 py-3 text-sm outline-none transition-all duration-200 backdrop-blur-sm"
-                    style={{
-                      background: theme === 'dark' 
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(255,255,255,0.8)',
-                      border: theme === 'dark'
-                        ? '1px solid rgba(255,255,255,0.1)'
-                        : '1px solid rgba(255,255,255,0.3)',
-                      color: theme === 'dark' ? '#ffffff' : '#090820',
-                    }}
+                    className="w-full rounded-xl pl-10 pr-12 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
                     required
                     minLength={6}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -337,33 +293,24 @@ export default function Register() {
 
               {/* Confirm Password */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5 uppercase tracking-wider transition-colors duration-300">
-                  Confirm Password
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+                  Confirm Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm your password"
-                    className="w-full rounded-xl pl-10 pr-12 py-3 text-sm outline-none transition-all duration-200 backdrop-blur-sm"
-                    style={{
-                      background: theme === 'dark' 
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(255,255,255,0.8)',
-                      border: theme === 'dark'
-                        ? '1px solid rgba(255,255,255,0.1)'
-                        : '1px solid rgba(255,255,255,0.3)',
-                      color: theme === 'dark' ? '#ffffff' : '#090820',
-                    }}
+                    className="w-full rounded-xl pl-10 pr-12 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -380,12 +327,12 @@ export default function Register() {
                   boxShadow: '0 4px 20px rgba(112,48,239,0.35)',
                 }}
               >
-                {isLoading ? "Creating Account..." : "Join the Resistance"}
+                {isLoading ? "Creating Account..." : "Register"}
               </button>
             </form>
 
             {/* Sign In Link */}
-            <p className="text-center text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300 mt-6">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
               Already have an account?{" "}
               <Link to="/login" className="font-bold text-purple-600 dark:text-purple-400 hover:underline transition-colors">
                 Sign In

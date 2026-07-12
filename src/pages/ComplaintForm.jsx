@@ -16,31 +16,32 @@ import {
   Shield,
   Eye,
   ChevronRight,
+  Key,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 export default function ComplaintForm() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     category: "",
-    title: "",
     description: "",
     evidence: null,
-    anonymous: true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [complaintCode, setComplaintCode] = useState("");
 
   const categories = [
     { value: "tiffin_theft", label: "🍱 Tiffin Theft", icon: "🍱" },
     { value: "bribe", label: "💰 Bribe / Toll", icon: "💰" },
     { value: "syllabus_bloat", label: "📚 Syllabus Bloat", icon: "📚" },
-    { value: "seat_abuse", label: "🪑 Seat Abuse", icon: "🪑" },
-    { value: "verbal_abuse", label: "🗣️ Verbal Abuse", icon: "🗣️" },
+    { value: "misuse_of_power", label: "👑 Misuse of Power", icon: "👑" },
     { value: "other", label: "📌 Other", icon: "📌" },
   ];
 
@@ -60,7 +61,6 @@ export default function ComplaintForm() {
     setIsSubmitting(true);
     setError("");
 
-    // Validation
     if (!formData.category) {
       setError("Please select a category");
       setIsSubmitting(false);
@@ -73,13 +73,32 @@ export default function ComplaintForm() {
     }
 
     try {
-      // Mock API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const formDataToSend = new FormData();
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('description', formData.description);
+      if (formData.evidence) {
+        formDataToSend.append('evidence', formData.evidence);
+      }
+
+      const response = await fetch(`${API_URL}/complaints`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataToSend,
+      });
+
+      const data = await response.json();
       
-      setSuccess(true);
-      setTimeout(() => {
-        navigate("/student/dashboard");
-      }, 2000);
+      if (data.success) {
+        setComplaintCode(data.complaint.complaintCode || 'TTS-A82K9');
+        setSuccess(true);
+        setTimeout(() => {
+          navigate("/student/dashboard");
+        }, 3000);
+      } else {
+        setError(data.message || "Failed to submit complaint");
+      }
     } catch (err) {
       setError("Failed to submit complaint. Please try again.");
     } finally {
@@ -100,27 +119,28 @@ export default function ComplaintForm() {
               <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
                 Complaint Submitted! 🎉
               </h2>
+              
+              {/* Anonymous Complaint Code */}
+              <div className="mb-4 p-4 rounded-xl bg-purple-50 dark:bg-purple-500/10 border-2 border-purple-400 dark:border-purple-500">
+                <p className="text-sm font-bold text-purple-600 dark:text-purple-400">🔑 Your Anonymous Complaint Code</p>
+                <p className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1 tracking-wider">
+                  {complaintCode}
+                </p>
+                <p className="text-xs text-purple-500 dark:text-purple-400/80 mt-1">
+                  ⚠️ Use this code to track your complaint status
+                </p>
+              </div>
+
               <p className="text-gray-500 dark:text-gray-400 mb-6">
                 Your anonymous complaint has been sent to the teacher for review.
-                Stay strong against Kuddus!
+                Your identity is completely hidden.
               </p>
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => navigate("/student/dashboard")}
-                  className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:scale-[1.02] transition-all"
-                >
-                  Back to Dashboard
-                </button>
-                <button
-                  onClick={() => {
-                    setSuccess(false);
-                    setFormData({ category: "", title: "", description: "", evidence: null, anonymous: true });
-                  }}
-                  className="px-6 py-3 rounded-xl font-bold text-purple-500 border-2 border-purple-500 hover:bg-purple-500 hover:text-white transition-all"
-                >
-                  Submit Another
-                </button>
-              </div>
+              <button
+                onClick={() => navigate("/student/dashboard")}
+                className="px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:scale-[1.02] transition-all"
+              >
+                Back to Dashboard
+              </button>
             </div>
           </div>
         </main>
@@ -155,7 +175,7 @@ export default function ComplaintForm() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Anonymous Badge */}
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <Eye className="h-4 w-4 text-purple-500" />
+                <Key className="h-4 w-4 text-purple-500" />
                 <span className="text-sm font-medium text-purple-500">
                   🔒 This report is completely anonymous
                 </span>
@@ -190,21 +210,6 @@ export default function ComplaintForm() {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Title */}
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
-                  Complaint Title
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="Brief title of the incident"
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
-                />
               </div>
 
               {/* Description */}
@@ -296,9 +301,9 @@ export default function ComplaintForm() {
             <div className="space-y-3">
               {[
                 { icon: Shield, label: "100% Anonymous", desc: "Your identity is never revealed" },
-                { icon: Clock, label: "24/7 Reporting", desc: "Report anytime, anywhere" },
-                { icon: CheckCircle, label: "Teacher Review", desc: "Every complaint is reviewed" },
-                { icon: AlertTriangle, label: "3 Strikes Rule", desc: "3 complaints = impeachment" },
+                { icon: Key, label: "Complaint Code", desc: "Track your complaint anonymously" },
+                { icon: Eye, label: "Teacher Review", desc: "Every complaint is reviewed" },
+                { icon: AlertTriangle, label: "3 Strikes Rule", desc: "3 verified complaints = impeachment" },
               ].map((item) => (
                 <div key={item.label} className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                   <div className="p-1.5 rounded-lg bg-purple-500/10 mt-0.5">
@@ -310,13 +315,6 @@ export default function ComplaintForm() {
                   </div>
                 </div>
               ))}
-            </div>
-
-            <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-500/10 dark:to-pink-500/10 border border-purple-500/20">
-              <p className="text-sm font-bold text-purple-600 dark:text-purple-400">⚡ Tip</p>
-              <p className="text-xs text-purple-600 dark:text-purple-400/80 mt-1">
-                Be specific about what happened. Include time, location, and details. Every detail helps!
-              </p>
             </div>
           </div>
         </div>

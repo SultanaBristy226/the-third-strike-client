@@ -1,60 +1,111 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
-    // Check for saved user
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    if (token) {
+      fetch(`${API_URL}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setUser(data.user);
+          } else {
+            localStorage.removeItem('token');
+            setToken(null);
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+          setToken(null);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  }, [token]);
 
-  const login = async (email, password, role) => {
-    // Mock login - replace with actual API
-    const mockUser = {
-      id: "1",
-      name: "Test User",
-      email,
-      role,
-      displayName: "Test User",
-    };
-    setUser(mockUser);
-    localStorage.setItem("user", JSON.stringify(mockUser));
-    return mockUser;
+  const register = async (userData) => {
+    try {
+      console.log("📤 Registering:", userData);
+      
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+      console.log("📥 Response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      if (data.success) {
+        setUser(data.user);
+        setToken(data.token);
+        localStorage.setItem('token', data.token);
+        return data.user;
+      }
+      throw new Error(data.message || 'Registration failed');
+    } catch (error) {
+      console.error("❌ Register error:", error);
+      throw error;
+    }
   };
 
-  const register = async (formData) => {
-    // Mock register - replace with actual API
-    const newUser = {
-      id: Date.now().toString(),
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-      displayName: formData.name,
-      rollNumber: formData.rollNumber || "",
-    };
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
-    return newUser;
+  const login = async (credentials) => {
+    try {
+      console.log("🔐 Logging in:", credentials);
+
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await response.json();
+      console.log("📥 Login response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      if (data.success) {
+        setUser(data.user);
+        setToken(data.token);
+        localStorage.setItem('token', data.token);
+        return data.user;
+      }
+      throw new Error(data.message || 'Login failed');
+    } catch (error) {
+      console.error("❌ Login error:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {
     setUser(null);
-    localStorage.removeItem("user");
+    setToken(null);
+    localStorage.removeItem('token');
   };
 
   const value = {
     user,
     loading,
-    login,
+    token,
     register,
+    login,
     logout,
+    displayName: user?.name || '',
   };
 
   return (
@@ -67,7 +118,7 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
