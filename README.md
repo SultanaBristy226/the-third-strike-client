@@ -168,33 +168,35 @@ npm run dev
 
 # 5. Open http://localhost:5173
 
- Routes & Pages
-Route	Page	Access
-/	Landing	Public
-/login	Login	Public
-/register	Register	Public
-/student/dashboard	Student Dashboard	Student
-/student/complaint	Complaint Form	Student
-/student/sos	SOS	Student
-/student/syllabus	Syllabus AI	Student
-/teacher/dashboard	Teacher Dashboard	Teacher
-/teacher/complaints	Complaint Review	Teacher
-/teacher/strikes	Issue Strikes	Teacher
-/teacher/audit	Audit Log	Teacher
-/captain/dashboard	Captain Dashboard	Captain
-/captain/sos	SOS Alerts	Captain
-/captain/strikes	Strike Management	Captain
-/seat-planner	Seat Planner	All
-/ledger	Ledger	All
-/fact-checker	Fact Checker	All
+| Route                 | Page                  | Access        |
+| --------------------- | --------------------- | ------------- |
+| `/`                   | Landing Page          | 🌐 Public     |
+| `/login`              | Login                 | 🌐 Public     |
+| `/register`           | Register              | 🌐 Public     |
+| `/student/dashboard`  | Student Dashboard     | 🎓 Student    |
+| `/student/complaint`  | Complaint Form        | 🎓 Student    |
+| `/student/sos`        | SOS Emergency         | 🎓 Student    |
+| `/student/syllabus`   | AI Syllabus Assistant | 🎓 Student    |
+| `/teacher/dashboard`  | Teacher Dashboard     | 👨‍🏫 Teacher |
+| `/teacher/complaints` | Complaint Review      | 👨‍🏫 Teacher |
+| `/teacher/strikes`    | Issue Strikes         | 👨‍🏫 Teacher |
+| `/teacher/audit`      | Audit Log             | 👨‍🏫 Teacher |
+| `/captain/dashboard`  | Captain Dashboard     | 👮 Captain    |
+| `/captain/sos`        | SOS Alerts            | 👮 Captain    |
+| `/captain/strikes`    | Strike Management     | 👮 Captain    |
+| `/seat-planner`       | Seat Planner          | 👥 All Users  |
+| `/ledger`             | Digital Ledger        | 👥 All Users  |
+| `/fact-checker`       | AI Fact Checker       | 👥 All Users  |
 
  Contributing
 This project is created for the BAIUST Computer Club Hackathon 2026.
 
-### Team Members:
-- **Habiba Sultana Bristy**
-- **Nosratee Jahan Naba**
-- **Amina Islam Meem**
-- **Iffat Ara Nowshin**
+---
+
+ Team Members
+    Habiba Sultana Bristy
+    Nosratee Jahan Naba
+    Amina Islam Meem
+    Iffat Ara Nowshin
 
 <div align="center"> <h3> Three strikes and Kuddus is out! </h3> <p>Made with  for student safety</p> </div> ```
