@@ -102,43 +102,6 @@
 - **Micro-interactions** & hover effects
 - **Accessibility** friendly
 
----
-
-##  Project Structure
-the-third-strike-client/
-├── src/
-│ ├── pages/
-│ │ ├── Landing.jsx # Homepage
-│ │ ├── Login.jsx # Authentication
-│ │ ├── Register.jsx # Registration
-│ │ ├── StudentDashboard.jsx # Student Dashboard
-│ │ ├── TeacherDashboard.jsx # Teacher Dashboard
-│ │ ├── CaptainDashboard.jsx # Captain Dashboard
-│ │ ├── ComplaintForm.jsx # Anonymous Complaint
-│ │ ├── SOS.jsx # Emergency SOS
-│ │ ├── SyllabusAI.jsx # AI Syllabus Summarizer
-│ │ ├── SeatPlanner.jsx # Seat Planner
-│ │ ├── Ledger.jsx # Economy Ledger
-│ │ ├── FactChecker.jsx # Kuddus Fact Checker
-│ │ ├── TeacherComplaints.jsx # Complaint Review
-│ │ ├── TeacherStrikes.jsx # Issue Strikes
-│ │ ├── TeacherAudit.jsx # Audit Log
-│ │ └── CaptainStrikes.jsx # Strike Management
-│ ├── components/
-│ │ ├── Navbar.jsx # Navigation Bar
-│ │ ├── Footer.jsx # Footer
-│ │ ├── ProgressBar.jsx # Strike Progress
-│ │ └── SeatGrid.jsx # Classroom Grid
-│ ├── context/
-│ │ ├── AuthContext.jsx # Authentication
-│ │ ├── ThemeContext.jsx # Dark/Light Mode
-│ │ └── SocketContext.jsx # WebSocket
-│ ├── App.jsx
-│ └── main.jsx
-├── public/
-├── .env
-├── package.json
-└── README.md
 
 ---
 
@@ -191,7 +154,6 @@ npm run dev
  Contributing
 This project is created for the BAIUST Computer Club Hackathon 2026.
 
----
 
  Team Members
     Habiba Sultana Bristy
@@ -199,4 +161,3 @@ This project is created for the BAIUST Computer Club Hackathon 2026.
     Amina Islam Meem
     Iffat Ara Nowshin
 
-<div align="center"> <h3> Three strikes and Kuddus is out! </h3> <p>Made with  for student safety</p> </div> ```
