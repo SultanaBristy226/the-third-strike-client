@@ -106,13 +106,14 @@ export default function StudentDashboard() {
     { icon: Search, label: "Fact Checker", color: "from-purple-400 to-purple-600", path: "/fact-checker" },
   ];
 
+  // ✅ Features - Ledger যোগ করা হয়েছে
   const features = [
-    { icon: Eye, label: "Anonymous Reporting", desc: "Report without fear" },
-    { icon: Siren, label: "SOS Alert", desc: "Instant emergency help" },
-    { icon: BookOpen, label: "Syllabus AI", desc: "Smart study planner" },
-    { icon: Search, label: "Fact Checker", desc: "Debunk Kuddus's lies" },
-    { icon: DollarSign, label: "Tiffin Ledger", desc: "Track food theft" },
-    { icon: Users, label: "Seat Planner", desc: "Anti-hide seating" },
+    { icon: Eye, label: "Anonymous Reporting", desc: "Report without fear", path: "/student/complaint" },
+    { icon: Siren, label: "SOS Alert", desc: "Instant emergency help", path: "/student/sos" },
+    { icon: BookOpen, label: "Syllabus AI", desc: "Smart study planner", path: "/student/syllabus" },
+    { icon: Search, label: "Fact Checker", desc: "Debunk Kuddus's lies", path: "/fact-checker" },
+    { icon: DollarSign, label: "Tiffin Ledger", desc: "Track food theft", path: "/ledger" },
+    { icon: Users, label: "Seat Planner", desc: "Anti-hide seating", path: "/seat-planner" },
   ];
 
   const upcomingEvents = [
@@ -391,12 +392,16 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Features Sidebar */}
+          {/* Features Sidebar - ✅ Ledger যোগ করা হয়েছে */}
           <div className="bg-white dark:bg-[#0d0a2a] rounded-2xl p-6 border border-gray-200 dark:border-white/10">
             <h3 className="font-bold text-gray-900 dark:text-white mb-4">🔥 Features</h3>
             <div className="space-y-3">
               {features.map((feature) => (
-                <div key={feature.label} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+                <Link
+                  key={feature.label}
+                  to={feature.path}
+                  className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                >
                   <div className="p-1.5 rounded-lg bg-purple-500/10">
                     <feature.icon className="h-4 w-4 text-purple-500" />
                   </div>
@@ -405,7 +410,7 @@ export default function StudentDashboard() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">{feature.desc}</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-gray-400" />
-                </div>
+                </Link>
               ))}
             </div>
           </div>
